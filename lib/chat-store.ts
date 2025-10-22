@@ -17,9 +17,9 @@ interface ChatState {
 }
 
 // Global state yönetimi için Zustand store
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set: any) => ({
   messages: [],
-  addMessage: (message) => set((state) => ({ 
+  addMessage: (message: ChatMessage) => set((state: ChatState) => ({ 
     messages: [...state.messages, message] 
   })),
   clearMessages: () => set({ messages: [] }),

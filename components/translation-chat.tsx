@@ -1,81 +1,25 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Hand, Volume2, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-interface Message {
-  id: string
-  type: "sign-to-text" | "audio-to-text" | "speech-to-text"
-  content: string
-  timestamp: Date
-  sender: "you" | "representative"
-}
-
-// Sınıf bir event emitter olarak çalışacak
-class MessageEvents {
-  private static instance: MessageEvents;
-  private listeners: Function[] = [];
-
-  private constructor() {}
-
-  public static getInstance(): MessageEvents {
-    if (!MessageEvents.instance) {
-      MessageEvents.instance = new MessageEvents();
-    }
-    return MessageEvents.instance;
-  }
-
-  public addListener(listener: Function): void {
-    this.listeners.push(listener);
-  }
-
-  public removeListener(listener: Function): void {
-    this.listeners = this.listeners.filter(l => l !== listener);
-  }
-
-  public emit(message: Message): void {
-    this.listeners.forEach(listener => listener(message));
-  }
-}
-
-// Global olarak erişilebilir instance
-export const messageEvents = MessageEvents.getInstance();
+import { useChatStore, ChatMessage } from "@/lib/chat-store"
 
 // Yeni konuşma mesajı eklemek için yardımcı fonksiyon
+// Bu fonksiyonu burada da tanımlıyoruz geriye dönük uyumluluk için
+// Gerçek implementasyon chat-store.ts'te
 export function addSpeechMessage(content: string): void {
-  const message: Message = {
-    id: Date.now().toString(),
-    type: "speech-to-text",
-    content,
-    timestamp: new Date(),
-    sender: "you"
-  };
-  
-  messageEvents.emit(message);
+  const { addSpeechMessage } = require("@/lib/chat-store");
+  addSpeechMessage(content);
 }
 
 export function TranslationChat() {
-  // Boş mesaj dizisi ile başla, sadece kullanıcının konuşmaları gösterilecek
-  const [messages, setMessages] = useState<Message[]>([])
+  // Zustand state'inden mesajları al
+  const messages = useChatStore(state => state.messages);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  
-  // Mesaj event listener'ını ekle
-  useEffect(() => {
-    const handleNewMessage = (message: Message) => {
-      setMessages(prev => [...prev, message]);
-    };
-    
-    messageEvents.addListener(handleNewMessage);
-    
-    return () => {
-      messageEvents.removeListener(handleNewMessage);
-    };
-  }, []);
   
   // Yeni mesaj eklendiğinde otomatik scroll
   useEffect(() => {

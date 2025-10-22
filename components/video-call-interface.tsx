@@ -173,7 +173,7 @@ export function VideoCallInterface() {
               setListeningStatus("");
               
               // Tanınan metni chate ekle
-              import('@/components/translation-chat').then(({ addSpeechMessage }) => {
+              import('@/lib/chat-store').then(({ addSpeechMessage }) => {
                 addSpeechMessage(text);
               });
             })
@@ -382,7 +382,7 @@ export function VideoCallInterface() {
                         console.log("[Speech] Tanınan metin:", text);
                         
                         // Tanınan metni chate ekle
-                        const { addSpeechMessage } = await import('@/components/translation-chat');
+                        const { addSpeechMessage } = await import('@/lib/chat-store');
                         addSpeechMessage(text);
                       } catch (error) {
                         console.error("[Speech] Tanıma hatası:", error);
