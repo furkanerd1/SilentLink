@@ -29,6 +29,7 @@ export function VideoCallInterface() {
   const [callDuration, setCallDuration] = useState(0)
   const [isSignLanguageActive, setIsSignLanguageActive] = useState(false)
   const [isSpeechToTextActive, setIsSpeechToTextActive] = useState(false)
+  const [isProcessingSpeech, setIsProcessingSpeech] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
@@ -152,11 +153,58 @@ export function VideoCallInterface() {
     console.log("[v0] Sign language detection:", !isSignLanguageActive ? "activated" : "deactivated")
   }
 
-  const toggleSpeechToText = () => {
-    setIsSpeechToTextActive(!isSpeechToTextActive)
-    // TODO: When backend is ready, call Azure Speech Services API
-    // Example: await fetch('/api/speech/toggle', { method: 'POST', body: JSON.stringify({ active: !isSpeechToTextActive }) })
-    console.log("[v0] Speech-to-text:", !isSpeechToTextActive ? "activated" : "deactivated")
+  const [listeningStatus, setListeningStatus] = useState("");
+  
+  const toggleSpeechToText = async () => {
+    const newState = !isSpeechToTextActive;
+    setIsSpeechToTextActive(newState);
+    
+    try {
+      if (newState) {
+        // Speech tanımayı başlat
+        setListeningStatus("Dinleme başlatılıyor...");
+        import('@/lib/azure-speech-service').then(({ azureSpeechService }) => {
+          console.log("[Speech] Azure Speech Service başlatılıyor...");
+          
+          // Sürekli tanıma başlat
+          azureSpeechService.startRecognition()
+            .then((text) => {
+              console.log("[Speech] Tanınan metin:", text);
+              setListeningStatus("");
+              
+              // Tanınan metni chate ekle
+              import('@/components/translation-chat').then(({ addSpeechMessage }) => {
+                addSpeechMessage(text);
+              });
+            })
+            .catch((error) => {
+              console.error("[Speech] Tanıma hatası:", error);
+              setListeningStatus("");
+              setIsSpeechToTextActive(false);
+            });
+        });
+      } else {
+        // Speech tanımayı durdur
+        setListeningStatus("Dinleme durduruluyor...");
+        import('@/lib/azure-speech-service').then(({ azureSpeechService }) => {
+          azureSpeechService.stopRecognition()
+            .then(() => {
+              console.log("[Speech] Tanıma durduruldu");
+              setListeningStatus("");
+            })
+            .catch((error) => {
+              console.error("[Speech] Tanıma durdurma hatası:", error);
+              setListeningStatus("");
+            });
+        });
+      }
+    } catch (error) {
+      console.error("[Speech] Speech service hatası:", error);
+      setListeningStatus("");
+      setIsSpeechToTextActive(false);
+    }
+    
+    console.log("[Speech] Speech-to-text:", newState ? "aktif" : "pasif");
   }
 
   return (
@@ -251,7 +299,7 @@ export function VideoCallInterface() {
                 <div className="absolute left-4 top-14">
                   <Badge variant="default" className="gap-2 bg-primary">
                     <Volume2 className="h-3 w-3" />
-                    Speech-to-Text Active
+                    Speech-to-Text Aktif {listeningStatus && `(${listeningStatus})`}
                   </Badge>
                 </div>
               )}
@@ -311,9 +359,44 @@ export function VideoCallInterface() {
                     size="lg"
                     onClick={toggleSpeechToText}
                     className="gap-2"
+                    disabled={isProcessingSpeech || !isAudioEnabled}
+                    title={!isAudioEnabled ? "Konuşma algılama için mikrofon açık olmalı" : ""}
                   >
                     <MessageSquare className="h-5 w-5" />
-                    <span className="text-sm">Speech-to-Text</span>
+                    <span className="text-sm">{isSpeechToTextActive ? "Dinleme Aktif" : "Speech-to-Text"}</span>
+                  </Button>
+                  
+                  <Button
+                    variant={isProcessingSpeech ? "default" : "outline"}
+                    size="lg"
+                    onClick={async () => {
+                      try {
+                        setIsProcessingSpeech(true);
+                        setListeningStatus("Dinleniyor...");
+                        
+                        // Tek seferlik tanıma yap
+                        const { azureSpeechService } = await import('@/lib/azure-speech-service');
+                        console.log("[Speech] Tek seferlik tanıma başlatılıyor...");
+                        
+                        const text = await azureSpeechService.recognizeOnce();
+                        console.log("[Speech] Tanınan metin:", text);
+                        
+                        // Tanınan metni chate ekle
+                        const { addSpeechMessage } = await import('@/components/translation-chat');
+                        addSpeechMessage(text);
+                      } catch (error) {
+                        console.error("[Speech] Tanıma hatası:", error);
+                      } finally {
+                        setIsProcessingSpeech(false);
+                        setListeningStatus("");
+                      }
+                    }}
+                    className="gap-2"
+                    disabled={isProcessingSpeech || isSpeechToTextActive || !isAudioEnabled}
+                    title={!isAudioEnabled ? "Konuşma algılama için mikrofon açık olmalı" : ""}
+                  >
+                    <Volume2 className={isProcessingSpeech ? "h-5 w-5 animate-pulse" : "h-5 w-5"} />
+                    <span className="text-sm">{isProcessingSpeech ? "Dinleniyor..." : "Tek Dinleme"}</span>
                   </Button>
 
                   <div className="mx-2 h-8 w-px bg-border" />
