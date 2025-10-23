@@ -19,6 +19,8 @@ import {
 } from "lucide-react"
 import { TranslationChat } from "@/components/translation-chat"
 import { SubtitleDisplay } from "@/components/subtitle-display"
+import { cn } from "@/lib/utils"
+import { Download, X as CloseIcon } from "lucide-react"
 
 export function VideoCallInterface() {
   const [isVideoEnabled, setIsVideoEnabled] = useState(false)
@@ -31,6 +33,7 @@ export function VideoCallInterface() {
   const [isSpeechToTextActive, setIsSpeechToTextActive] = useState(false)
   const [isProcessingSpeech, setIsProcessingSpeech] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
@@ -105,6 +108,19 @@ export function VideoCallInterface() {
 
   // End call
   const endCall = () => {
+    // Eğer mesajlar varsa kaydetme dialogunu göster
+    const { getMessages } = require('@/lib/chat-store');
+    const messages = getMessages();
+    
+    if (messages.length > 0) {
+      setShowSaveDialog(true);
+    } else {
+      // Mesaj yoksa direkt kapat
+      closeCallConnection();
+    }
+  }
+
+  const closeCallConnection = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop())
       streamRef.current = null
@@ -112,6 +128,36 @@ export function VideoCallInterface() {
     setIsVideoEnabled(false)
     setIsAudioEnabled(false)
     setIsConnected(false)
+  }
+
+  const handleSaveChat = () => {
+    const { getMessages } = require('@/lib/chat-store');
+    const messages = getMessages();
+    
+    // Sohbeti JSON formatında indir
+    const chatData = {
+      date: new Date().toISOString(),
+      duration: callDuration,
+      messages: messages
+    };
+    
+    const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sohbet-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setShowSaveDialog(false);
+    closeCallConnection();
+  }
+
+  const handleDiscardChat = () => {
+    setShowSaveDialog(false);
+    closeCallConnection();
   }
 
   useEffect(() => {
@@ -209,46 +255,93 @@ export function VideoCallInterface() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
+      {/* Save Chat Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" style={{zIndex: 999}}>
+          <Card className="w-full max-w-md mx-4 p-6 space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Sohbeti Kaydet</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Görüşme sırasındaki konuşmaları kaydetmek ister misiniz?
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Görüşme Süresi:</span>
+                <span className="font-medium">{formatDuration(callDuration)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Mesaj Sayısı:</span>
+                <span className="font-medium">{require('@/lib/chat-store').getMessages().length} mesaj</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={handleDiscardChat}
+                className="flex-1"
+              >
+                Kaydetme
+              </Button>
+              <Button
+                onClick={handleSaveChat}
+                className="flex-1 gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Kaydet
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="border-b border-border bg-card px-6 py-4">
+      <header className="border-b border-border bg-card px-3 py-3 md:px-6 md:py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Hand className="h-5 w-5 text-primary-foreground" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-primary">
+              <Hand className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">SignBridge</h1>
-              <p className="text-sm text-muted-foreground">Accessible Communication Platform</p>
+              <h1 className="text-sm md:text-lg font-semibold text-foreground">SignBridge</h1>
+              <p className="hidden sm:block text-xs md:text-sm text-muted-foreground">Accessible Communication Platform</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {isConnected && (
-              <Badge variant="secondary" className="gap-2">
+              <Badge variant="secondary" className="gap-1 sm:gap-1.5 md:gap-2 text-xs sm:text-sm px-2 py-1 sm:px-2.5 sm:py-1">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
                 {formatDuration(callDuration)}
               </Badge>
             )}
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+              <Settings className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Video Area */}
-        <div className="flex flex-1 flex-col">
-          <div className="relative h-[calc(100vh-180px)] bg-muted/30 p-4">
+        <div className={cn(
+          "flex flex-1 flex-col transition-all duration-300",
+          showChat ? "md:mr-0" : ""
+        )}>
+          <div className="relative h-[calc(100vh-180px)] md:h-[calc(100vh-180px)] bg-muted/30 p-2 md:p-4">
             {/* Remote Video (Bank Representative) */}
             <Card className="relative h-full overflow-hidden bg-card">
               <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
               {!isVideoEnabled && (
                 <div className="absolute inset-0 flex items-center justify-center bg-muted">
                   <div className="text-center">
-                    <VideoOff className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-                    <p className="text-lg text-muted-foreground">Camera Off</p>
+                    <VideoOff className="mx-auto mb-2 md:mb-4 h-12 w-12 md:h-16 md:w-16 text-muted-foreground" />
+                    <p className="text-sm md:text-lg text-muted-foreground">Camera Off</p>
                   </div>
                 </div>
               )}
@@ -257,118 +350,128 @@ export function VideoCallInterface() {
               {isConnected && isSpeechToTextActive && <SubtitleDisplay />}
 
               {/* Local Video (Picture-in-Picture) */}
-              <div className="absolute right-4 top-4 w-64 overflow-hidden rounded-lg border-2 border-border bg-card shadow-lg">
+              <div className="absolute right-2 top-2 md:right-4 md:top-4 w-32 md:w-64 overflow-hidden rounded-lg border-2 border-border bg-card shadow-lg">
                 <video ref={remoteVideoRef} autoPlay playsInline className="aspect-video h-full w-full object-cover" />
                 {!isConnected && (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted/90">
                     <div className="text-center">
-                      <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                        <Video className="h-6 w-6 text-primary" />
+                      <div className="mx-auto mb-1 md:mb-2 flex h-8 w-8 md:h-12 md:w-12 items-center justify-center rounded-full bg-primary/10">
+                        <Video className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                       </div>
-                      <p className="text-xs text-muted-foreground">Bank Rep</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Bank Rep</p>
                     </div>
                   </div>
                 )}
-                <div className="absolute bottom-2 left-2">
-                  <Badge variant="secondary" className="text-xs">
-                    Bank Representative
+                <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2">
+                  <Badge variant="secondary" className="text-[10px] md:text-xs">
+                    Bank Rep
                   </Badge>
                 </div>
               </div>
 
               {/* Microphone activity indicator */}
               {isConnected && isAudioEnabled && audioLevel > 10 && (
-                <div className="absolute bottom-4 left-4">
-                  <Badge variant="default" className="gap-2 bg-green-600">
-                    <Mic className="h-3 w-3" />
-                    Microphone Active
+                <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 md:bottom-4 md:left-4">
+                  <Badge variant="default" className="gap-0.5 sm:gap-1 md:gap-2 bg-green-600 text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                    <Mic className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3" />
+                    <span className="hidden md:inline">Microphone Active</span>
+                    <span className="md:hidden">Mic</span>
                   </Badge>
                 </div>
               )}
 
               {isConnected && isSignLanguageActive && (
-                <div className="absolute left-4 top-4">
-                  <Badge variant="default" className="gap-2 bg-accent">
-                    <Hand className="h-3 w-3" />
-                    Sign Detection Active
+                <div className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2 md:left-4 md:top-4">
+                  <Badge variant="default" className="gap-0.5 sm:gap-1 md:gap-2 bg-accent text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                    <Hand className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3" />
+                    <span className="hidden md:inline">Sign Detection Active</span>
+                    <span className="md:hidden">Sign</span>
                   </Badge>
                 </div>
               )}
 
               {isConnected && isSpeechToTextActive && (
-                <div className="absolute left-4 top-14">
-                  <Badge variant="default" className="gap-2 bg-primary">
-                    <Volume2 className="h-3 w-3" />
-                    Speech-to-Text Aktif {listeningStatus && `(${listeningStatus})`}
+                <div className="absolute left-1.5 top-8 sm:left-2 sm:top-10 md:left-4 md:top-14">
+                  <Badge variant="default" className="gap-0.5 sm:gap-1 md:gap-2 bg-primary text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                    <Volume2 className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3" />
+                    <span className="hidden md:inline">Speech-to-Text Aktif {listeningStatus && `(${listeningStatus})`}</span>
+                    <span className="md:hidden">STT</span>
                   </Badge>
                 </div>
               )}
             </Card>
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-card px-6 py-4">
-            <div className="flex items-center justify-center gap-3">
+          {/* Control Bar - Always full width */}
+          <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-card px-3 py-2.5 sm:px-4 md:px-6 md:py-3 z-30">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 flex-wrap max-w-6xl mx-auto">
               {!isConnected ? (
-                <Button size="lg" className="gap-2 px-8" onClick={requestMediaAccess}>
-                  <Video className="h-5 w-5" />
-                  Start Call
+                <Button size="sm" className="gap-1.5 px-5 sm:px-6 md:px-8 text-sm sm:text-base h-9 sm:h-10 md:h-11 font-medium" onClick={requestMediaAccess}>
+                  <Video className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
+                  <span>Aramayı Başlat</span>
                 </Button>
               ) : (
                 <>
+                  {/* Primary Controls */}
                   <Button
                     variant={isVideoEnabled ? "secondary" : "destructive"}
-                    size="lg"
+                    size="sm"
                     onClick={toggleVideo}
-                    className="gap-2"
+                    className="gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-18 sm:min-w-20"
                   >
-                    {isVideoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+                    {isVideoEnabled ? <Video className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" /> : <VideoOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />}
+                    <span className="text-xs sm:text-sm">Kamera</span>
                   </Button>
 
                   <Button
                     variant={isAudioEnabled ? "secondary" : "destructive"}
-                    size="lg"
+                    size="sm"
                     onClick={toggleAudio}
-                    className="gap-2"
+                    className="gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-20 sm:min-w-22"
                   >
-                    {isAudioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                    {isAudioEnabled ? <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" /> : <MicOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />}
+                    <span className="text-xs sm:text-sm">Mikrofon</span>
                   </Button>
 
                   <Button
                     variant={isSpeakerEnabled ? "secondary" : "outline"}
-                    size="lg"
+                    size="sm"
                     onClick={() => setIsSpeakerEnabled(!isSpeakerEnabled)}
-                    className="gap-2"
+                    className="gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-20 sm:min-w-22"
                   >
-                    {isSpeakerEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                    {isSpeakerEnabled ? <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" /> : <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />}
+                    <span className="text-xs sm:text-sm">Hoparlör</span>
                   </Button>
 
-                  <div className="mx-2 h-8 w-px bg-border" />
+                  {/* Separator */}
+                  <div className="hidden sm:block h-6 md:h-7 w-px bg-border/60" />
 
+                  {/* Feature Controls */}
                   <Button
                     variant={isSignLanguageActive ? "default" : "outline"}
-                    size="lg"
+                    size="sm"
                     onClick={toggleSignLanguageDetection}
-                    className="gap-2"
+                    className="gap-1 px-2 sm:px-2.5 md:px-3 whitespace-nowrap h-8 sm:h-9 md:h-10 min-w-22 sm:min-w-24"
                   >
-                    <Hand className="h-5 w-5" />
-                    <span className="text-sm">Sign Language</span>
+                    <Hand className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />
+                    <span className="text-xs sm:text-sm">İşaret Dili</span>
                   </Button>
 
                   <Button
                     variant={isSpeechToTextActive ? "default" : "outline"}
-                    size="lg"
+                    size="sm"
                     onClick={toggleSpeechToText}
-                    className="gap-2"
+                    className="gap-1 px-2 sm:px-2.5 md:px-3 whitespace-nowrap h-8 sm:h-9 md:h-10 min-w-28 sm:min-w-32"
                     disabled={isProcessingSpeech || !isAudioEnabled}
                     title={!isAudioEnabled ? "Konuşma algılama için mikrofon açık olmalı" : ""}
                   >
-                    <MessageSquare className="h-5 w-5" />
-                    <span className="text-sm">{isSpeechToTextActive ? "Dinleme Aktif" : "Speech-to-Text"}</span>
+                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />
+                    <span className="text-xs sm:text-sm">{isSpeechToTextActive ? "Dinleniyor" : "Konuşma Çevir"}</span>
                   </Button>
                   
                   <Button
                     variant={isProcessingSpeech ? "default" : "outline"}
-                    size="lg"
+                    size="sm"
                     onClick={async () => {
                       try {
                         setIsProcessingSpeech(true);
@@ -391,29 +494,49 @@ export function VideoCallInterface() {
                         setListeningStatus("");
                       }
                     }}
-                    className="gap-2"
+                    className="gap-1 px-2 sm:px-2.5 md:px-3 whitespace-nowrap h-8 sm:h-9 md:h-10 min-w-20 sm:min-w-24"
                     disabled={isProcessingSpeech || isSpeechToTextActive || !isAudioEnabled}
                     title={!isAudioEnabled ? "Konuşma algılama için mikrofon açık olmalı" : ""}
                   >
-                    <Volume2 className={isProcessingSpeech ? "h-5 w-5 animate-pulse" : "h-5 w-5"} />
-                    <span className="text-sm">{isProcessingSpeech ? "Dinleniyor..." : "Tek Dinleme"}</span>
+                    <Volume2 className={isProcessingSpeech ? "h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 animate-pulse" : "h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5"} />
+                    <span className="text-xs sm:text-sm">{isProcessingSpeech ? "Dinleniyor" : "Tek Çeviri"}</span>
                   </Button>
 
-                  <div className="mx-2 h-8 w-px bg-border" />
+                  {/* Separator */}
+                  <div className="hidden sm:block h-6 md:h-7 w-px bg-border/60" />
 
-                  <Button variant="outline" size="lg" onClick={() => setShowChat(!showChat)} className="gap-2">
-                    <MessageSquare className="h-5 w-5" />
+                  {/* Utility Controls */}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowChat(!showChat)} 
+                    className="gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-16 sm:min-w-18"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />
+                    <span className="text-xs sm:text-sm hidden md:inline">Sohbet</span>
                   </Button>
 
-                  <Button variant="outline" size="lg" className="gap-2 bg-transparent">
-                    <Maximize2 className="h-5 w-5" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1 px-2.5 sm:px-3 md:px-4 bg-transparent hidden lg:flex h-8 sm:h-9 md:h-10 min-w-24"
+                  >
+                    <Maximize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />
+                    <span className="text-xs sm:text-sm">Tam Ekran</span>
                   </Button>
 
-                  <div className="mx-2 h-8 w-px bg-border" />
+                  {/* Separator */}
+                  <div className="hidden sm:block h-6 md:h-7 w-px bg-border/60" />
 
-                  <Button variant="destructive" size="lg" onClick={endCall} className="gap-2">
-                    <Phone className="h-5 w-5 rotate-135" />
-                    End Call
+                  {/* End Call */}
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={endCall} 
+                    className="gap-1 px-2.5 sm:px-3 md:px-4 whitespace-nowrap h-8 sm:h-9 md:h-10 min-w-26 sm:min-w-30 font-medium"
+                  >
+                    <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 rotate-135" />
+                    <span className="text-xs sm:text-sm">Aramayı Kapat</span>
                   </Button>
                 </>
               )}
@@ -421,8 +544,26 @@ export function VideoCallInterface() {
           </div>
         </div>
 
-        {/* Translation Chat Sidebar */}
-        {showChat && <TranslationChat />}
+        {/* Translation Chat Sidebar - Desktop: sidebar, Mobile: full overlay with close button */}
+        {showChat && (
+          <>
+            {/* Mobile overlay backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/80 z-40 md:hidden"
+              onClick={() => setShowChat(false)}
+            />
+            {/* Chat panel */}
+            <div className={cn(
+              "fixed md:relative right-0 top-0 bottom-0 z-50 md:z-auto",
+              "w-full sm:w-[85%] md:w-96 sm:max-w-sm md:max-w-none",
+              "transition-transform duration-300 ease-in-out",
+              "md:translate-x-0",
+              "shadow-2xl md:shadow-none"
+            )}>
+              <TranslationChat onClose={() => setShowChat(false)} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

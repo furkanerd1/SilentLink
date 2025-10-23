@@ -37,3 +37,13 @@ export function addSpeechMessage(content: string): void {
   
   useChatStore.getState().addMessage(message);
 }
+
+// Mesajları almak için yardımcı fonksiyon
+export function getMessages(): ChatMessage[] {
+  return useChatStore.getState().messages;
+}
+
+// Mesajları temizlemek için yardımcı fonksiyon
+export function clearAllMessages(): void {
+  useChatStore.getState().clearMessages();
+}
