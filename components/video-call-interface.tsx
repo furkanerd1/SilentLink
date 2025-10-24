@@ -402,19 +402,40 @@ export function VideoCallInterface() {
       )}
 
       {/* Header */}
-      <header className="border-b border-border bg-card px-3 py-3 md:px-6 md:py-4">
+      <header className="border-b border-border px-3 py-3 md:px-6 md:py-4" style={{backgroundColor: '#750a36'}}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-primary">
-              <Hand className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
+          <div className="flex items-center gap-3 md:gap-4 lg:gap-5">
+            <div className="flex h-12 w-16 md:h-16 md:w-24 lg:h-20 lg:w-32 items-center justify-center rounded-lg border border-white/30 bg-white/95 backdrop-blur-sm">
+              <img 
+                src="/images/alter.png"
+                alt="Alternatif Bank"
+                className="h-10 w-auto md:h-14 md:w-auto lg:h-18 lg:w-auto max-w-[60px] md:max-w-[88px] lg:max-w-[120px] object-contain"
+                onError={(e) => {
+                  // Logo yüklenemezse alternatif logo dene
+                  if (e.currentTarget.src.includes('alter.png')) {
+                    e.currentTarget.src = '/images/alterp2.png';
+                  } else {
+                    // Her iki logo da başarısızsa el iconunu göster
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      parent.className = 'flex h-12 w-16 md:h-16 md:w-24 lg:h-20 lg:w-32 items-center justify-center rounded-lg border border-white/30';
+                      parent.style.backgroundColor = '#750a36';
+                      parent.innerHTML = '<svg class="h-6 w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 713 0v1m0 0V11m0-5.5a1.5 1.5 0 713 0v3m0 0V11"></path></svg>';
+                    }
+                  }
+                }}
+              />
             </div>
-            <div>
-              <h1 className="text-sm md:text-lg font-semibold text-foreground">SilenLink</h1>
-              <p className="hidden sm:block text-xs md:text-sm text-muted-foreground">Accessible Communication Platform</p>
+            <div className="flex items-center gap-2 md:gap-4">
+              <div>
+                <h1 className="text-sm md:text-lg font-semibold text-white">SilentLink</h1>
+                <p className="hidden sm:block text-xs md:text-sm text-white/80">Accessible Communication Platform</p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2 md:gap-4">
             {isConnected && (
               <Badge variant="secondary" className="gap-1 sm:gap-1.5 md:gap-2 text-xs sm:text-sm px-2 py-1 sm:px-2.5 sm:py-1">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
@@ -484,7 +505,7 @@ export function VideoCallInterface() {
 
               {isConnected && isSignLanguageActive && (
                 <div className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2 md:left-4 md:top-4">
-                  <Badge variant="default" className="gap-0.5 sm:gap-1 md:gap-2 bg-accent text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                  <Badge variant="default" className="gap-0.5 sm:gap-1 md:gap-2 text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1" style={{backgroundColor: '#750a36', color: 'white'}}>
                     <Hand className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3" />
                     <span className="hidden md:inline">İşaret Tanıma Aktif</span>
                     <span className="md:hidden">İşaret</span>
@@ -518,7 +539,7 @@ export function VideoCallInterface() {
           <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-card px-3 py-2.5 sm:px-4 md:px-6 md:py-3 z-30">
             <div className="flex items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 flex-wrap max-w-6xl mx-auto">
               {!isConnected ? (
-                <Button size="sm" className="gap-1.5 px-5 sm:px-6 md:px-8 text-sm sm:text-base h-9 sm:h-10 md:h-11 font-medium" onClick={requestMediaAccess}>
+                <Button size="sm" className="gap-1.5 px-5 sm:px-6 md:px-8 text-sm sm:text-base h-9 sm:h-10 md:h-11 font-medium text-white border-white/20" style={{backgroundColor: '#750a36'}} onClick={requestMediaAccess}>
                   <Video className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
                   <span>Aramayı Başlat</span>
                 </Button>
@@ -529,7 +550,9 @@ export function VideoCallInterface() {
                     variant={isVideoEnabled ? "secondary" : "destructive"}
                     size="sm"
                     onClick={toggleVideo}
-                    className="gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-18 sm:min-w-20"
+                    className={`gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-18 sm:min-w-20 ${
+                      !isVideoEnabled ? "bg-[#5a0829] hover:bg-[#4a0621] text-white border-[#5a0829]" : ""
+                    }`}
                   >
                     {isVideoEnabled ? <Video className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" /> : <VideoOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />}
                     <span className="text-xs sm:text-sm">Kamera</span>
@@ -539,7 +562,9 @@ export function VideoCallInterface() {
                     variant={isAudioEnabled ? "secondary" : "destructive"}
                     size="sm"
                     onClick={toggleAudio}
-                    className="gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-20 sm:min-w-22"
+                    className={`gap-1 px-2.5 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 min-w-20 sm:min-w-22 ${
+                      !isAudioEnabled ? "bg-[#5a0829] hover:bg-[#4a0621] text-white border-[#5a0829]" : ""
+                    }`}
                   >
                     {isAudioEnabled ? <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" /> : <MicOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />}
                     <span className="text-xs sm:text-sm">Mikrofon</span>

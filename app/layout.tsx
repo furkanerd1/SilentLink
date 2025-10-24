@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SilenLink - Sign Language Translation Platform",
+  title: "SilentLink - Sign Language Translation Platform",
   description: "Real-time video communication platform that bridges the gap between hearing-impaired individuals and service representatives through AI-powered sign language translation.",
 };
 

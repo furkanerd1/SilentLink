@@ -1,10 +1,10 @@
-# SilenLink - Sign Language Translation Platform
+# SilentLink - Sign Language Translation Platform
 
 A real-time video communication platform that bridges the gap between hearing-impaired individuals and service representatives through AI-powered sign language translation and speech-to-text capabilities.
 
 ## Overview
 
-SilenLink enables seamless communication during video calls by:
+SilentLink enables seamless communication during video calls by:
 
 - **Sign Language Detection**: Detects sign language gestures from the camera and converts them to text/audio
 - **Speech-to-Text**: Displays incoming audio as real-time subtitles
