@@ -13,6 +13,10 @@
 
 **▶️ [Demo Videosunu İzleyin](https://www.youtube.com/watch?v=ThzJdOib3T8)**
 
+## Sunum
+**▶️ [Sunum](https://www.canva.com/design/DAG2o5BbvjE/BU0fDhxiBm-vn-DyVPVTpw/edit?utm_content=DAG2o5BbvjE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
+
+
 ---
 
 ## 🌟 **Proje Vizyonu**
