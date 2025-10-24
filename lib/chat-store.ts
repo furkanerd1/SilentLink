@@ -38,6 +38,19 @@ export function addSpeechMessage(content: string): void {
   useChatStore.getState().addMessage(message);
 }
 
+// İşaret dili mesajı eklemek için yardımcı fonksiyon
+export function addSignLanguageMessage(content: string): void {
+  const message: ChatMessage = {
+    id: Date.now().toString(),
+    type: "sign-to-text",
+    content,
+    timestamp: new Date(),
+    sender: "you"
+  };
+  
+  useChatStore.getState().addMessage(message);
+}
+
 // Mesajları almak için yardımcı fonksiyon
 export function getMessages(): ChatMessage[] {
   return useChatStore.getState().messages;

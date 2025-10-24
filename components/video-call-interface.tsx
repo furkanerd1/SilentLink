@@ -34,10 +34,12 @@ export function VideoCallInterface() {
   const [isProcessingSpeech, setIsProcessingSpeech] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [lastDetectedSign, setLastDetectedSign] = useState<string>("")
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const signLanguageStopRef = useRef<(() => void) | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
 
@@ -192,11 +194,111 @@ export function VideoCallInterface() {
     }
   }, [isConnected, isAudioEnabled])
 
-  const toggleSignLanguageDetection = () => {
-    setIsSignLanguageActive(!isSignLanguageActive)
-    // TODO: When backend is ready, call Azure Custom Vision API
-    // Example: await fetch('/api/sign-language/toggle', { method: 'POST', body: JSON.stringify({ active: !isSignLanguageActive }) })
-    console.log("[v0] Sign language detection:", !isSignLanguageActive ? "activated" : "deactivated")
+  const toggleSignLanguageDetection = async () => {
+    const newState = !isSignLanguageActive;
+    console.log("[SignLanguage] Toggle işaret dili tanıma:", newState ? "aktif" : "pasif");
+    
+    setIsSignLanguageActive(newState);
+    
+    try {
+      if (newState) {
+        // Önce bağlantıyı test et
+        console.log("[SignLanguage] Custom Vision bağlantısı test ediliyor...");
+        
+        try {
+          const testResponse = await fetch('/api/test-custom-vision', {
+            method: 'POST',
+          });
+          const testResult = await testResponse.json();
+          
+          console.log("[SignLanguage] Test sonucu:", testResult);
+          
+          if (!testResult.success) {
+            console.error("[SignLanguage] Azure bağlantı testi başarısız:", testResult);
+            alert(`Azure Custom Vision bağlantı hatası: ${testResult.error}`);
+            setIsSignLanguageActive(false);
+            return;
+          }
+        } catch (testError) {
+          console.error("[SignLanguage] Test endpoint hatası:", testError);
+          alert("Azure Custom Vision test edilemedi - API endpoint kontrol edilmelidir");
+          setIsSignLanguageActive(false);
+          return;
+        }
+        
+        // İşaret dili tanımayı başlat
+        console.log("[SignLanguage] Azure Custom Vision başlatılıyor...");
+        
+        if (localVideoRef.current && isVideoEnabled) {
+          console.log("[SignLanguage] Video ref bulundu, analiz başlatılıyor");
+          console.log("[SignLanguage] Video element details:");
+          console.log("- videoWidth:", localVideoRef.current.videoWidth);
+          console.log("- videoHeight:", localVideoRef.current.videoHeight);
+          console.log("- readyState:", localVideoRef.current.readyState);
+          console.log("- srcObject:", localVideoRef.current.srcObject);
+          
+          const { customVisionService } = await import('@/lib/custom-vision-service');
+          
+          // Sürekli analiz başlat
+          const stopAnalysis = customVisionService.startContinuousAnalysis(
+            localVideoRef.current,
+            (results) => {
+              console.log("[SignLanguage] Analiz sonucu alındı:", results);
+              
+              if (results.length > 0) {
+                const topResult = results[0];
+                const message = `${topResult.tagNameTurkish} (${Math.round(topResult.probability * 100)}% güven)`;
+                
+                console.log("[SignLanguage] En iyi sonuç:", topResult);
+                console.log("[SignLanguage] Chat'e eklenecek mesaj:", message);
+                setLastDetectedSign(message);
+                
+                // Chat'e ekle
+                import('@/lib/chat-store').then(({ addSignLanguageMessage }) => {
+                  console.log("[SignLanguage] Chat store'a mesaj ekleniyor...");
+                  addSignLanguageMessage(message);
+                  console.log("[SignLanguage] Mesaj eklendi");
+                });
+              } else {
+                console.log("[SignLanguage] Sonuç boş veya threshold altında");
+              }
+            }
+          );
+          
+          signLanguageStopRef.current = stopAnalysis;
+          console.log("[SignLanguage] Sürekli analiz başarıyla başlatıldı");
+        } else {
+          console.warn("[SignLanguage] Video etkin değil veya video ref bulunamadı");
+          console.log("[SignLanguage] localVideoRef.current:", localVideoRef.current);
+          console.log("[SignLanguage] isVideoEnabled:", isVideoEnabled);
+          if (localVideoRef.current) {
+            console.log("[SignLanguage] Video element state:");
+            console.log("- videoWidth:", localVideoRef.current.videoWidth);
+            console.log("- videoHeight:", localVideoRef.current.videoHeight);
+            console.log("- readyState:", localVideoRef.current.readyState);
+            console.log("- srcObject:", localVideoRef.current.srcObject);
+          }
+          alert("Video kamera açılmalıdır - önce 'Aramayı Başlat' butonuna basın");
+          setIsSignLanguageActive(false);
+        }
+      } else {
+        // İşaret dili tanımayı durdur
+        console.log("[SignLanguage] Tanıma durduruluyor...");
+        if (signLanguageStopRef.current) {
+          signLanguageStopRef.current();
+          signLanguageStopRef.current = null;
+          console.log("[SignLanguage] Analiz başarıyla durduruldu");
+        }
+        setLastDetectedSign("");
+      }
+    } catch (error) {
+      console.error("[SignLanguage] Custom Vision servisi hatası:", error);
+      alert(`İşaret dili tanıma hatası: ${error}`);
+      setIsSignLanguageActive(false);
+      setLastDetectedSign("");
+    }
+    
+    console.log("[SignLanguage] İşaret dili tanıma durumu:", newState ? "aktif" : "pasif");
   }
 
   const [listeningStatus, setListeningStatus] = useState("");
@@ -307,7 +409,7 @@ export function VideoCallInterface() {
               <Hand className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-sm md:text-lg font-semibold text-foreground">SignBridge</h1>
+              <h1 className="text-sm md:text-lg font-semibold text-foreground">SilenLink</h1>
               <p className="hidden sm:block text-xs md:text-sm text-muted-foreground">Accessible Communication Platform</p>
             </div>
           </div>
@@ -384,8 +486,18 @@ export function VideoCallInterface() {
                 <div className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2 md:left-4 md:top-4">
                   <Badge variant="default" className="gap-0.5 sm:gap-1 md:gap-2 bg-accent text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
                     <Hand className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3" />
-                    <span className="hidden md:inline">Sign Detection Active</span>
-                    <span className="md:hidden">Sign</span>
+                    <span className="hidden md:inline">İşaret Tanıma Aktif</span>
+                    <span className="md:hidden">İşaret</span>
+                  </Badge>
+                </div>
+              )}
+
+              {/* Son algılanan işaret göstergesi */}
+              {isConnected && isSignLanguageActive && lastDetectedSign && (
+                <div className="absolute right-1.5 top-1.5 sm:right-2 sm:top-2 md:right-4 md:top-4 max-w-[200px]">
+                  <Badge variant="default" className="gap-0.5 sm:gap-1 bg-orange-600 text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                    <Hand className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3" />
+                    <span className="truncate">{lastDetectedSign}</span>
                   </Badge>
                 </div>
               )}
@@ -455,6 +567,99 @@ export function VideoCallInterface() {
                   >
                     <Hand className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5" />
                     <span className="text-xs sm:text-sm">İşaret Dili</span>
+                  </Button>
+
+                  {/* Test Controls */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        console.log("[Test] Azure Custom Vision bağlantısı test ediliyor...");
+                        const response = await fetch('/api/test-custom-vision', {
+                          method: 'POST',
+                        });
+                        const result = await response.json();
+                        console.log("[Test] Test sonucu:", result);
+                        
+                        if (result.success) {
+                          alert(`✅ Azure Custom Vision bağlantısı başarılı!\n\nModel: ${result.details?.modelName}\nEndpoint: ${result.details?.endpoint}`);
+                        } else {
+                          alert(`❌ Azure Custom Vision bağlantı hatası:\n\n${result.error}`);
+                        }
+                      } catch (error) {
+                        console.error("[Test] Test endpoint hatası:", error);
+                        alert(`❌ Test endpoint hatası: ${error}`);
+                      }
+                    }}
+                    className="gap-1 px-2 sm:px-2.5 md:px-3 whitespace-nowrap h-8 sm:h-9 md:h-10"
+                  >
+                    <span className="text-xs sm:text-sm">🔧 Test</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Browser console'da detaylı log göster
+                      console.group("🔍 İşaret Dili Debug Bilgisi");
+                      console.log("isConnected:", isConnected);
+                      console.log("isVideoEnabled:", isVideoEnabled);
+                      console.log("isSignLanguageActive:", isSignLanguageActive);
+                      console.log("localVideoRef.current:", localVideoRef.current);
+                      console.log("lastDetectedSign:", lastDetectedSign);
+                      console.log("Environment variables:");
+                      console.log("- NEXT_PUBLIC_CUSTOM_VISION_PREDICTION_KEY:", process.env.NEXT_PUBLIC_CUSTOM_VISION_PREDICTION_KEY ? "✅ Tanımlı" : "❌ Eksik");
+                      console.log("- NEXT_PUBLIC_CUSTOM_VISION_ENDPOINT:", process.env.NEXT_PUBLIC_CUSTOM_VISION_ENDPOINT ? "✅ Tanımlı" : "❌ Eksik");
+                      console.log("- NEXT_PUBLIC_CUSTOM_VISION_PROJECT_ID:", process.env.NEXT_PUBLIC_CUSTOM_VISION_PROJECT_ID ? "✅ Tanımlı" : "❌ Eksik");
+                      console.log("- NEXT_PUBLIC_CUSTOM_VISION_MODEL_NAME:", process.env.NEXT_PUBLIC_CUSTOM_VISION_MODEL_NAME ? "✅ Tanımlı" : "❌ Eksik");
+                      console.groupEnd();
+                      
+                      alert("🔍 Debug bilgisi console'da gösterildi - F12 ile geliştirici araçlarını açın");
+                    }}
+                    className="gap-1 px-2 sm:px-2.5 md:px-3 whitespace-nowrap h-8 sm:h-9 md:h-10"
+                  >
+                    <span className="text-xs sm:text-sm">🔍 Debug</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        console.log("[Iterations] Model iterations listeleniyor...");
+                        const response = await fetch('/api/list-iterations', {
+                          method: 'POST',
+                        });
+                        const result = await response.json();
+                        console.log("[Iterations] Iterations sonucu:", result);
+                        
+                        if (result.success) {
+                          const published = result.data.publishedIterations;
+                          let message = `✅ Model Iterations:\n\n`;
+                          
+                          if (published.length > 0) {
+                            message += published.map((iter: any, index: number) => 
+                              `${index + 1}. Name: ${iter.name}\n   PublishName: ${iter.publishName}\n   Status: ${iter.status}\n   Created: ${new Date(iter.created).toLocaleDateString()}`
+                            ).join('\n\n');
+                            
+                            message += `\n\n✨ Kullanılması gereken publishName değerlerinden birini .env dosyasında NEXT_PUBLIC_CUSTOM_VISION_MODEL_NAME olarak kullanın.`;
+                          } else {
+                            message += "❌ Hiç published iteration bulunamadı!\n\nAzure Custom Vision'da modelinizi publish etmeniz gerekiyor.";
+                          }
+                          
+                          alert(message);
+                        } else {
+                          alert(`❌ Iterations listesi alınamadı:\n\n${result.error}`);
+                        }
+                      } catch (error) {
+                        console.error("[Iterations] Error:", error);
+                        alert(`❌ Iterations error: ${error}`);
+                      }
+                    }}
+                    className="gap-1 px-2 sm:px-2.5 md:px-3 whitespace-nowrap h-8 sm:h-9 md:h-10"
+                  >
+                    <span className="text-xs sm:text-sm">📋 Models</span>
                   </Button>
 
                   <Button

@@ -1,10 +1,11 @@
-# SignBridge - Sign Language Translation Platform
+# SilenLink - Sign Language Translation Platform
 
 A real-time video communication platform that bridges the gap between hearing-impaired individuals and service representatives through AI-powered sign language translation and speech-to-text capabilities.
 
 ## Overview
 
-SignBridge enables seamless communication during video calls by:
+SilenLink enables seamless communication during video calls by:
+
 - **Sign Language Detection**: Detects sign language gestures from the camera and converts them to text/audio
 - **Speech-to-Text**: Displays incoming audio as real-time subtitles
 - **Live Translation Chat**: Shows all translations in a side panel for reference
@@ -63,31 +64,33 @@ When you click "Start Call", your browser will request camera and microphone per
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────────┐
-│                  SignBridge Frontend                         │
-│         (React/Next.js - Camera, Microphone, UI)            │
+│ SilenLink Frontend │
+│ (React/Next.js - Camera, Microphone, UI) │
 └────────────┬────────────────────────────────┬───────────────┘
-             │                                │
-             │ HTTP Requests                  │ HTTP Requests
-             ▼                                ▼
-┌────────────────────────┐      ┌────────────────────────────┐
-│  Backend API Routes    │      │   Backend API Routes       │
-│  /api/sign-language    │      │   /api/speech              │
-└────────────┬───────────┘      └────────────┬───────────────┘
-             │                                │
-             │ Server-side calls              │ Server-side calls
-             ▼                                ▼
-┌────────────────────────┐      ┌────────────────────────────┐
-│  Azure Custom Vision   │      │   Azure Speech Services    │
-│  (Sign Language AI)    │      │   (Speech-to-Text & TTS)   │
-└────────────────────────┘      └────────────────────────────┘
+│ │
+│ HTTP Requests │ HTTP Requests
+▼ ▼
+┌────────────────────────┐ ┌────────────────────────────┐
+│ Backend API Routes │ │ Backend API Routes │
+│ /api/sign-language │ │ /api/speech │
+└────────────┬───────────┘ └────────────┬───────────────┘
+│ │
+│ Server-side calls │ Server-side calls
+▼ ▼
+┌────────────────────────┐ ┌────────────────────────────┐
+│ Azure Custom Vision │ │ Azure Speech Services │
+│ (Sign Language AI) │ │ (Speech-to-Text & TTS) │
+└────────────────────────┘ └────────────────────────────┘
 \`\`\`
 
 ### Required Azure Services
 
 #### 1. Azure Custom Vision (Sign Language Detection)
+
 **Purpose**: Detect and translate sign language gestures in real-time
 
 **Setup Steps**:
+
 1. Go to [Azure Portal](https://portal.azure.com)
 2. Create a **Custom Vision** resource
 3. Train a custom model for sign language recognition
@@ -102,10 +105,10 @@ Create the following API route in your backend:
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData();
-    const imageBlob = formData.get('frame') as Blob;
-    
+try {
+const formData = await request.formData();
+const imageBlob = formData.get('frame') as Blob;
+
     if (!imageBlob) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
@@ -141,13 +144,14 @@ export async function POST(request: NextRequest) {
       signs: detectedSigns,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Sign language detection error:', error);
-    return NextResponse.json(
-      { error: 'Failed to detect sign language' },
-      { status: 500 }
-    );
-  }
+
+} catch (error) {
+console.error('Sign language detection error:', error);
+return NextResponse.json(
+{ error: 'Failed to detect sign language' },
+{ status: 500 }
+);
+}
 }
 \`\`\`
 
@@ -158,31 +162,31 @@ Update `components/video-call-interface.tsx`:
 \`\`\`typescript
 // Capture and send frames to backend when sign language is active
 useEffect(() => {
-  let interval: NodeJS.Timeout;
-  
-  if (isConnected && isVideoEnabled && isSignLanguageActive) {
-    interval = setInterval(async () => {
-      const canvas = document.createElement('canvas');
-      const video = localVideoRef.current;
-      
+let interval: NodeJS.Timeout;
+
+if (isConnected && isVideoEnabled && isSignLanguageActive) {
+interval = setInterval(async () => {
+const canvas = document.createElement('canvas');
+const video = localVideoRef.current;
+
       if (video) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d')?.drawImage(video, 0, 0);
-        
+
         canvas.toBlob(async (blob) => {
           if (blob) {
             const formData = new FormData();
             formData.append('frame', blob);
-            
+
             try {
               const response = await fetch('/api/sign-language/detect', {
                 method: 'POST',
                 body: formData,
               });
-              
+
               const data = await response.json();
-              
+
               if (data.signs && data.signs.length > 0) {
                 // Send detected signs to translation chat
                 console.log('Detected signs:', data.signs);
@@ -195,9 +199,10 @@ useEffect(() => {
         }, 'image/jpeg', 0.8);
       }
     }, 1000); // Capture every 1 second
-  }
-  
-  return () => clearInterval(interval);
+
+}
+
+return () => clearInterval(interval);
 }, [isConnected, isVideoEnabled, isSignLanguageActive]);
 \`\`\`
 
@@ -212,9 +217,11 @@ AZURE_CUSTOM_VISION_ITERATION=your_iteration_name
 ---
 
 #### 2. Azure Speech Services (Speech-to-Text & Text-to-Speech)
+
 **Purpose**: Convert speech to text for subtitles and convert detected signs to speech
 
 **Setup Steps**:
+
 1. Go to [Azure Portal](https://portal.azure.com)
 2. Create a **Speech Services** resource
 3. Get your **Subscription Key** and **Region**
@@ -228,10 +235,10 @@ Create the following API routes:
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData();
-    const audioBlob = formData.get('audio') as Blob;
-    
+try {
+const formData = await request.formData();
+const audioBlob = formData.get('audio') as Blob;
+
     if (!audioBlob) {
       return NextResponse.json({ error: 'No audio provided' }, { status: 400 });
     }
@@ -259,13 +266,14 @@ export async function POST(request: NextRequest) {
       confidence: result.NBest?.[0]?.Confidence || 0,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Speech recognition error:', error);
-    return NextResponse.json(
-      { error: 'Failed to recognize speech' },
-      { status: 500 }
-    );
-  }
+
+} catch (error) {
+console.error('Speech recognition error:', error);
+return NextResponse.json(
+{ error: 'Failed to recognize speech' },
+{ status: 500 }
+);
+}
 }
 \`\`\`
 
@@ -274,9 +282,9 @@ export async function POST(request: NextRequest) {
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  try {
-    const { text } = await request.json();
-    
+try {
+const { text } = await request.json();
+
     if (!text) {
       return NextResponse.json({ error: 'No text provided' }, { status: 400 });
     }
@@ -311,13 +319,14 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'audio/mpeg',
       },
     });
-  } catch (error) {
-    console.error('Speech synthesis error:', error);
-    return NextResponse.json(
-      { error: 'Failed to synthesize speech' },
-      { status: 500 }
-    );
-  }
+
+} catch (error) {
+console.error('Speech synthesis error:', error);
+return NextResponse.json(
+{ error: 'Failed to synthesize speech' },
+{ status: 500 }
+);
+}
 }
 \`\`\`
 
@@ -328,35 +337,35 @@ Update `components/video-call-interface.tsx`:
 \`\`\`typescript
 // Speech-to-Text: Capture audio and send to backend
 useEffect(() => {
-  let mediaRecorder: MediaRecorder | null = null;
-  let audioChunks: Blob[] = [];
-  
-  if (isConnected && isAudioEnabled && isSpeechToTextActive && streamRef.current) {
-    const audioStream = new MediaStream(
-      streamRef.current.getAudioTracks()
-    );
-    
+let mediaRecorder: MediaRecorder | null = null;
+let audioChunks: Blob[] = [];
+
+if (isConnected && isAudioEnabled && isSpeechToTextActive && streamRef.current) {
+const audioStream = new MediaStream(
+streamRef.current.getAudioTracks()
+);
+
     mediaRecorder = new MediaRecorder(audioStream);
-    
+
     mediaRecorder.ondataavailable = (event) => {
       audioChunks.push(event.data);
     };
-    
+
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
       audioChunks = [];
-      
+
       const formData = new FormData();
       formData.append('audio', audioBlob);
-      
+
       try {
         const response = await fetch('/api/speech/recognize', {
           method: 'POST',
           body: formData,
         });
-        
+
         const data = await response.json();
-        
+
         if (data.text) {
           console.log('Recognized text:', data.text);
           // TODO: Update subtitle display with recognized text
@@ -365,7 +374,7 @@ useEffect(() => {
         console.error('Error recognizing speech:', error);
       }
     };
-    
+
     // Record in 3-second chunks
     mediaRecorder.start();
     const interval = setInterval(() => {
@@ -374,32 +383,34 @@ useEffect(() => {
         mediaRecorder.start();
       }
     }, 3000);
-    
+
     return () => {
       clearInterval(interval);
       if (mediaRecorder?.state === 'recording') {
         mediaRecorder.stop();
       }
     };
-  }
+
+}
 }, [isConnected, isAudioEnabled, isSpeechToTextActive]);
 
 // Text-to-Speech: Convert detected signs to audio
 const speakDetectedSign = async (signText: string) => {
-  try {
-    const response = await fetch('/api/speech/synthesize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: signText }),
-    });
-    
+try {
+const response = await fetch('/api/speech/synthesize', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ text: signText }),
+});
+
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     audio.play();
-  } catch (error) {
-    console.error('Error synthesizing speech:', error);
-  }
+
+} catch (error) {
+console.error('Error synthesizing speech:', error);
+}
 };
 \`\`\`
 
@@ -416,13 +427,16 @@ AZURE_SPEECH_REGION=your_region
 Create a `.env.local` file in your project root:
 
 \`\`\`env
+
 # Azure Custom Vision (Sign Language Detection)
+
 AZURE_CUSTOM_VISION_ENDPOINT=https://your-region.api.cognitive.microsoft.com
 AZURE_CUSTOM_VISION_KEY=your_prediction_key
 AZURE_CUSTOM_VISION_PROJECT_ID=your_project_id
 AZURE_CUSTOM_VISION_ITERATION=your_iteration_name
 
 # Azure Speech Services (Speech-to-Text & Text-to-Speech)
+
 AZURE_SPEECH_KEY=your_speech_services_key
 AZURE_SPEECH_REGION=your_region
 \`\`\`
@@ -432,6 +446,7 @@ AZURE_SPEECH_REGION=your_region
 ### Implementation Checklist
 
 #### Backend API Routes
+
 - [ ] Create `/app/api/sign-language/detect/route.ts` for sign language detection
 - [ ] Create `/app/api/speech/recognize/route.ts` for speech-to-text
 - [ ] Create `/app/api/speech/synthesize/route.ts` for text-to-speech
@@ -439,6 +454,7 @@ AZURE_SPEECH_REGION=your_region
 - [ ] Test each API route independently
 
 #### Frontend Integration
+
 - [ ] Add frame capture logic when sign language is active
 - [ ] Add audio capture logic when speech-to-text is active
 - [ ] Connect detected signs to translation chat component
@@ -447,6 +463,7 @@ AZURE_SPEECH_REGION=your_region
 - [ ] Handle loading states and errors gracefully
 
 #### Azure Services Setup
+
 - [ ] Create Azure Custom Vision project
 - [ ] Train sign language detection model
 - [ ] Create Azure Speech Services resource
@@ -490,24 +507,24 @@ AZURE_SPEECH_REGION=your_region
 \`\`\`
 sign-language-translator/
 ├── app/
-│   ├── api/                          # Backend API routes
-│   │   ├── sign-language/
-│   │   │   └── detect/
-│   │   │       └── route.ts          # Sign language detection
-│   │   └── speech/
-│   │       ├── recognize/
-│   │       │   └── route.ts          # Speech-to-text
-│   │       └── synthesize/
-│   │           └── route.ts          # Text-to-speech
-│   ├── globals.css                   # Global styles
-│   ├── layout.tsx                    # Root layout
-│   └── page.tsx                      # Main page
+│ ├── api/ # Backend API routes
+│ │ ├── sign-language/
+│ │ │ └── detect/
+│ │ │ └── route.ts # Sign language detection
+│ │ └── speech/
+│ │ ├── recognize/
+│ │ │ └── route.ts # Speech-to-text
+│ │ └── synthesize/
+│ │ └── route.ts # Text-to-speech
+│ ├── globals.css # Global styles
+│ ├── layout.tsx # Root layout
+│ └── page.tsx # Main page
 ├── components/
-│   ├── ui/                           # shadcn/ui components
-│   ├── video-call-interface.tsx      # Main video interface
-│   ├── translation-chat.tsx          # Translation chat sidebar
-│   └── subtitle-display.tsx          # Subtitle overlay
-├── .env.local                        # Environment variables (create this)
+│ ├── ui/ # shadcn/ui components
+│ ├── video-call-interface.tsx # Main video interface
+│ ├── translation-chat.tsx # Translation chat sidebar
+│ └── subtitle-display.tsx # Subtitle overlay
+├── .env.local # Environment variables (create this)
 └── README.md
 \`\`\`
 
@@ -516,6 +533,7 @@ sign-language-translator/
 ## Support
 
 For issues or questions:
+
 - Check the [Azure Custom Vision documentation](https://docs.microsoft.com/azure/cognitive-services/custom-vision-service/)
 - Check the [Azure Speech Services documentation](https://docs.microsoft.com/azure/cognitive-services/speech-service/)
 - Review the Next.js API routes documentation
