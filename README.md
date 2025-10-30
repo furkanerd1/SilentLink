@@ -5,48 +5,48 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.com/)
 [![Alternatif Bank](https://img.shields.io/badge/Powered%20by-Alternatif%20Bank-750a36?style=flat-square)](https://www.alternatifbank.com.tr/)
 
-> **Milyonlarca işitme engelli bireyi bankacılık hizmetlerinden dışlayan dijital uçurumu ortadan kaldırmak için Azure AI'ın gücünü kullanarak, işaret dilini gerçek zamanlı metne çeviren ve her konuşmayı anında yazıya döken devrimci 
+> Milyonlarca işitme engelli bireyi bankacılık hizmetlerinden dışlayan dijital uçurumu ortadan kaldırmak için Azure AI'ın gücünü kullanarak, işaret dilini gerçek zamanlı metne çeviren ve her konuşmayı anında yazıya döken devrimci 
 
-## Sunum
-**▶️ [Sunum](https://www.canva.com/design/DAG2o5BbvjE/BU0fDhxiBm-vn-DyVPVTpw/edit?utm_content=DAG2o5BbvjE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
+
+**[Sunum](https://www.canva.com/design/DAG2o5BbvjE/BU0fDhxiBm-vn-DyVPVTpw/edit?utm_content=DAG2o5BbvjE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
 
 
 ---
 
-## 🌟 **Proje Vizyonu**
+## 🌟**Proje Vizyonu**
 
 SilentLink, sadece bir teknoloji çözümü değil; finansal eşitlik için bir köprü kurarak, işitme engelli müşterilerin banka şubelerine gitmeden, tercüman arayışına girmeden, **tam bağımsızlıkla** tüm bankacılık işlemlerini gerçekleştirebilmelerini sağlayan sosyal etki odaklı bir yenilik hareketidir.
 
-### 🎯 **Ana Hedefler**
+### 🎯**Ana Hedefler**
 
-- 🤝 **Finansal Eşitlik**: Her bireyin eşit bankacılık hizmetine erişimi
-- 🚀 **Teknolojik İnovasyon**: Azure AI ile gerçek zamanlı çeviri teknolojisi
-- ♿ **Tam Erişilebilirlik**: WCAG 2.1 uyumlu kullanıcı deneyimi
-- 🏦 **Kurumsal Çözüm**: Bankacılık sektörü için ölçeklenebilir platform
-
----
-
-## 🚀 **Temel Özellikler**
-
-### 🤖 **Azure AI Destekli Özellikler**
-
-- **🗣️ Konuşma → Metin**: Azure Speech Services ile gerçek zamanlı Türkçe STT
-- **👋 İşaret Dili → Metin**: Azure Custom Vision ile işaret dili tanıma
-- **📱 Sesli Okuma**: Metin-konuşma sentezi (TTS)
-- **🎯 Yüksek Doğruluk**: %95+ güvenilirlik oranı
-
-### 💻 **Platform Özellikleri**
-
-- **📹 HD Video Görüşme**: WebRTC tabanlı gerçek zamanlı iletişim
-- **💬 Canlı Sohbet**: Çok modlu mesajlaşma sistemi
-- **📱 Responsive Tasarım**: Mobil-öncelikli arayüz
-- **🔒 Güvenli İletişim**: HTTPS şifreli veri aktarımı
+-  **Finansal Eşitlik**: Her bireyin eşit bankacılık hizmetine erişimi
+-  **Teknolojik İnovasyon**: Azure AI ile gerçek zamanlı çeviri teknolojisi
+-  **Tam Erişilebilirlik**: WCAG 2.1 uyumlu kullanıcı deneyimi
+-  **Kurumsal Çözüm**: Bankacılık sektörü için ölçeklenebilir platform
 
 ---
 
-## 📸 **Proje Medya Galerisi**
+## 🚀**Temel Özellikler**
 
-### 🖥️ **Platform Görüntüleri**
+###  **Azure AI Destekli Özellikler**
+
+- **Konuşma → Metin**: Azure Speech Services ile gerçek zamanlı Türkçe STT
+- **İşaret Dili → Metin**: Azure Custom Vision ile işaret dili tanıma
+- **Sesli Okuma**: Metin-konuşma sentezi (TTS)
+- **Yüksek Doğruluk**: %95+ güvenilirlik oranı
+
+###  **Platform Özellikleri**
+
+- **HD Video Görüşme**: WebRTC tabanlı gerçek zamanlı iletişim
+- **Canlı Sohbet**: Çok modlu mesajlaşma sistemi
+- **Responsive Tasarım**: Mobil-öncelikli arayüz
+- **Güvenli İletişim**: HTTPS şifreli veri aktarımı
+
+---
+
+##  **Proje Medya Galerisi**
+
+###  **Platform Görüntüleri**
 
 #### Ana Arayüz
 
@@ -62,7 +62,7 @@ SilentLink, sadece bir teknoloji çözümü değil; finansal eşitlik için bir 
 ![mobile-4](https://github.com/user-attachments/assets/62b18413-811a-41e0-8ef8-91c2179079c5)
 
 
-### 📊 **Teknik Mimari**
+###  **Teknik Mimari**
 
 ![mimari](https://github.com/user-attachments/assets/28d6b2d1-6c97-4d2c-b6d1-43c1f1ad77f8)
 
