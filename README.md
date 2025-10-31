@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.com/)
 [![Alternatif Bank](https://img.shields.io/badge/Powered%20by-Alternatif%20Bank-750a36?style=flat-square)](https://www.alternatifbank.com.tr/)
 
-> Milyonlarca işitme engelli bireyi bankacılık hizmetlerinden dışlayan dijital uçurumu ortadan kaldırmak için Azure AI'ın gücünü kullanarak, işaret dilini gerçek zamanlı metne çeviren ve her konuşmayı anında yazıya döken devrimci 
+> Milyonlarca işitme engelli bireyi bankacılık hizmetlerinden dışlayan dijital uçurumu ortadan kaldırmak için Azure AI'ın gücünü kullanarak, işaret dilini gerçek zamanlı metne çeviren ve her konuşmayı anında yazıya döken SilentLink, Alternatif Bank & Microsoft Engelsiz Bankacılık Hackathonu’nda yalnızca 2 gün içinde geliştirilmiş ve 2.lik ödülü kazanmış bir projedir. 
 
 
 **[Sunum](https://www.canva.com/design/DAG2o5BbvjE/BU0fDhxiBm-vn-DyVPVTpw/edit?utm_content=DAG2o5BbvjE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
