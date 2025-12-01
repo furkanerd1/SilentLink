@@ -7,17 +7,13 @@
 
 > Milyonlarca işitme engelli bireyi bankacılık hizmetlerinden dışlayan dijital uçurumu ortadan kaldırmak için Azure AI'ın gücünü kullanarak, işaret dilini gerçek zamanlı metne çeviren ve her konuşmayı anında yazıya döken SilentLink, Alternatif Bank & Microsoft Engelsiz Bankacılık Hackathonu’nda yalnızca 2 gün içinde geliştirilmiş ve 2.lik ödülü kazanmış bir projedir. 
 
-
-**[Sunum](https://www.canva.com/design/DAG2o5BbvjE/BU0fDhxiBm-vn-DyVPVTpw/edit?utm_content=DAG2o5BbvjE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
-
-
 ---
 
-## 🌟**Proje Vizyonu**
+## **Proje Vizyonu**
 
 SilentLink, sadece bir teknoloji çözümü değil; finansal eşitlik için bir köprü kurarak, işitme engelli müşterilerin banka şubelerine gitmeden, tercüman arayışına girmeden, **tam bağımsızlıkla** tüm bankacılık işlemlerini gerçekleştirebilmelerini sağlayan sosyal etki odaklı bir yenilik hareketidir.
 
-### 🎯**Ana Hedefler**
+### **Ana Hedefler**
 
 -  **Finansal Eşitlik**: Her bireyin eşit bankacılık hizmetine erişimi
 -  **Teknolojik İnovasyon**: Azure AI ile gerçek zamanlı çeviri teknolojisi
@@ -26,7 +22,7 @@ SilentLink, sadece bir teknoloji çözümü değil; finansal eşitlik için bir 
 
 ---
 
-## 🚀**Temel Özellikler**
+## **Temel Özellikler**
 
 ###  **Azure AI Destekli Özellikler**
 
